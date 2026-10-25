@@ -1,0 +1,52 @@
+{
+  "name": "dsh-companion",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "cordis.patch.yml",
+    "src/**/*.ts"
+  ],
+  "engines": {
+    "dsh": "0.2.1-rc.3"
+  },
+  "scripts": {
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit",
+    "add": "dsh plugin --profile web add .",
+    "remove": "dsh plugin --profile web remove dsh-companion",
+    "dev": "dsh plugin --profile web remove dsh-companion && dsh plugin --profile web add . && dsh --profile web --no-open"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-agent": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-api-session-controller": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-llm": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-session": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-workspace": "0.2.1-rc.3"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "10.0.0",
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-agent": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-api-session-controller": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-llm": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-session": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-workspace": "0.2.1-rc.3",
+    "@tsconfig/node24": "24.0.5",
+    "@types/node": "24.19.2",
+    "eslint": "10.13.0",
+    "typescript": "6.0.3"
+  }
+}
