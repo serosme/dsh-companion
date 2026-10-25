@@ -9,6 +9,7 @@ export const inject = [
   'workspaceRegistry',
   'tools',
   'agents',
+  'systemPrompt',
 ]
 
 export { Config } from './base/index.ts'

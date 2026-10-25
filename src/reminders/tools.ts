@@ -1,16 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis'
-import type { TextBlock } from '@deepseek-ai/dsh-llm'
 import type { Reminders } from './scheduler.ts'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-
-function renderJson(_args: unknown, value: unknown): TextBlock[] {
-  return [
-    {
-      type: 'text',
-      text: JSON.stringify(value),
-    },
-  ]
-}
+import { renderJson } from '../shared/tool.ts'
 
 export function registerReminderTools(scope: Context, reminders: Reminders): () => void {
   const disposers = [

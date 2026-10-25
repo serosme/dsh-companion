@@ -1,6 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { ConfigValue } from './config.ts'
 import { attachReminders } from '../reminders/index.ts'
+import { attachSelf } from '../self/index.ts'
 import { prepareTodaySession } from '../session/index.ts'
 import { requireWorkspace } from '../shared/workspace.ts'
 import { attachState } from '../state/index.ts'
@@ -20,6 +21,7 @@ export function attachBase(ctx: Context, config: ConfigValue): void {
   ctx.effect(() => () => controller.abort())
 
   attachReminders(ctx, { workspace, state })
+  attachSelf(ctx, workspace)
 
   scheduleTask(ctx, {
     name: 'daily session',

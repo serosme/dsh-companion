@@ -1,11 +1,17 @@
 import type { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import type Conf from 'conf'
 import type { CompanionState } from '../state/store.ts'
-import { samePath } from '../shared/workspace.ts'
+import { attachWorkspaceAgents } from '../shared/agents.ts'
 import { Reminders } from './scheduler.ts'
 import { registerReminderTools } from './tools.ts'
+
+const SCHEDULE_TOOLS = [
+  'schedule_create',
+  'schedule_delete',
+  'schedule_list',
+  'schedule_update',
+]
 
 export interface RemindersOptions {
   readonly workspace: Workspace
@@ -22,23 +28,31 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
     return () => reminders.dispose()
   }, 'dsh-companion:reminders')
 
-  const attachAgent = (agent: Agent): void => {
-    const cwd = agent.session.header.cwd
-    if (cwd === undefined || !samePath(cwd, options.workspace.path))
-      return
+  attachWorkspaceAgents(ctx, options.workspace, (agent) => {
+    const scope = agent.ctx
 
-    ctx.effect(
-      () => registerReminderTools(agent.ctx, reminders),
-      `dsh-companion:reminders:${String(agent.session.id)}`,
-    )
+    scope.effect(() => {
+      const disposers = [
+        registerReminderTools(scope, reminders),
+        hideScheduleTools(ctx, scope),
+      ]
+
+      return () => {
+        for (const dispose of disposers)
+          dispose()
+      }
+    }, `dsh-companion:reminders:${String(agent.session.id)}`)
 
     ctx.logger().info('reminder tools attached to', String(agent.session.id))
-  }
-
-  ctx.on('agent/created', ({ agent }) => {
-    attachAgent(agent)
   })
+}
 
-  for (const agent of ctx.agents.list())
-    attachAgent(agent)
+function hideScheduleTools(ctx: Context, scope: Context): () => void {
+  try {
+    return scope.tools.restrict({ deny: SCHEDULE_TOOLS })
+  }
+  catch (error: unknown) {
+    ctx.logger().warn('failed to hide schedule tools', error)
+    return () => {}
+  }
 }
