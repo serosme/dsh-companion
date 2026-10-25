@@ -3,7 +3,8 @@ import type { ConfigValue } from './config.ts'
 import { prepareTodaySession } from '../session/index.ts'
 import { requireWorkspace } from '../shared/workspace.ts'
 import { attachState } from '../state/index.ts'
-import { scheduleTodaySession } from './schedule.ts'
+import { wakeTodaySession } from '../wakeup/index.ts'
+import { scheduleTask } from './schedule.ts'
 
 export { Config } from './config.ts'
 export type { ConfigValue } from './config.ts'
@@ -17,11 +18,24 @@ export function attachBase(ctx: Context, config: ConfigValue): void {
 
   ctx.effect(() => () => controller.abort())
 
-  scheduleTodaySession(ctx, {
-    cron: config.cron,
+  scheduleTask(ctx, {
+    name: 'daily session',
+    cron: config.daily.cron,
+    runNow: true,
     task: () => prepareTodaySession(ctx, {
       workspace,
-      message: config.message,
+      message: config.daily.message,
+      signal: controller.signal,
+      state,
+    }),
+  })
+
+  scheduleTask(ctx, {
+    name: 'wakeup',
+    cron: config.wakeup.cron,
+    task: () => wakeTodaySession(ctx, {
+      workspace,
+      message: config.wakeup.message,
       signal: controller.signal,
       state,
     }),
