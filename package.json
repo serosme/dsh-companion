@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@deepseek-ai/schemastery": "3.18.5",
+    "conf": "16.0.0",
     "croner": "10.0.1"
   },
   "devDependencies": {

@@ -7,9 +7,16 @@ export interface ScheduleOptions {
 }
 
 export function scheduleTodaySession(ctx: Context, options: ScheduleOptions): void {
+  const log = ctx.logger()
+
+  const tick = (): void => {
+    log.info('daily session tick')
+    options.task()
+  }
+
   options.task()
 
-  ctx.logger().info('daily session scheduled with cron', options.cron)
+  log.info('daily session scheduled with cron', options.cron)
 
-  ctx.effect(() => startCron({ cron: options.cron, onTick: options.task }), 'dsh-companion:base')
+  ctx.effect(() => startCron({ cron: options.cron, onTick: tick }), 'dsh-companion:base')
 }

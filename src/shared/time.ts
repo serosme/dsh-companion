@@ -5,3 +5,11 @@ export function todayTitle(): string {
     .format(new Date())
     .replaceAll('-', '')
 }
+
+export function formatTime(ms: number): string {
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: TIME_ZONE,
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  }).format(ms)
+}

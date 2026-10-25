@@ -2,6 +2,12 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { createUserMessage } from '@deepseek-ai/dsh-llm/message'
 
+declare module '@deepseek-ai/dsh-llm/message' {
+  interface MessageSourceMap {
+    companion: { kind: 'companion' }
+  }
+}
+
 export async function deliverPrompt(ctx: Context, sessionId: SessionId, text: string): Promise<void> {
   const resolved = await ctx.sessionController.resolveAgent(sessionId)
   if ('error' in resolved)
@@ -11,6 +17,6 @@ export async function deliverPrompt(ctx: Context, sessionId: SessionId, text: st
     content: [
       { type: 'text', text },
     ],
-    source: { kind: 'user' },
+    source: { kind: 'companion' },
   }))
 }

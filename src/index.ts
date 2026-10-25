@@ -10,6 +10,6 @@ export { Config } from './base/index.ts'
 
 export function apply(ctx: Context, config: ConfigValue): void {
   attachLogger(ctx)
-  ctx.logger().info('plugin loaded')
   attachBase(ctx, config)
+  ctx.logger().info('plugin loaded')
 }

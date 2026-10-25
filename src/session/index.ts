@@ -2,6 +2,8 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { SessionSummary } from '@deepseek-ai/dsh-api-session-controller'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
+import type Conf from 'conf'
+import type { CompanionState } from '../state/store.ts'
 import { todayTitle } from '../shared/time.ts'
 import { deliverPrompt } from './deliver.ts'
 import { pickTodaySession } from './select.ts'
@@ -12,11 +14,12 @@ export interface TodaySessionOptions {
   readonly workspace: Workspace
   readonly message: string
   readonly signal: AbortSignal
+  readonly state: Conf<CompanionState>
 }
 
 export interface TodaySessionOutcome {
   readonly sessionId: SessionId
-  readonly created: boolean
+  readonly action: 'created' | 'greeted' | 'exists'
 }
 
 export function prepareTodaySession(ctx: Context, options: TodaySessionOptions): void {
@@ -24,18 +27,20 @@ export function prepareTodaySession(ctx: Context, options: TodaySessionOptions):
 
   void ensureTodaySession(ctx, options)
     .then((outcome) => {
-      if (options.signal.aborted)
+      if (outcome === undefined)
         return
 
-      if (outcome === undefined) {
-        log.info('today session already exists')
-        return
+      log.info('today session', outcome.action, outcome.sessionId)
+
+      try {
+        if (options.state.get('todaySessionId') !== outcome.sessionId) {
+          options.state.set('todaySessionId', outcome.sessionId)
+          log.info('state todaySessionId', outcome.sessionId)
+        }
       }
-
-      log.info(
-        outcome.created ? 'created today session' : 'greeted blank today session',
-        outcome.sessionId,
-      )
+      catch (error: unknown) {
+        log.error('failed to save state todaySessionId', error)
+      }
     })
     .catch((error: unknown) => {
       if (options.signal.aborted)
@@ -58,11 +63,11 @@ export async function ensureTodaySession(
 
   if (existing !== undefined) {
     if (!existing.blank)
-      return undefined
+      return { sessionId: existing.sessionId, action: 'exists' }
 
     await deliverPrompt(ctx, existing.sessionId, options.message)
 
-    return { sessionId: existing.sessionId, created: false }
+    return { sessionId: existing.sessionId, action: 'greeted' }
   }
 
   if (options.signal.aborted)
@@ -72,7 +77,7 @@ export async function ensureTodaySession(
   await ctx.sessionController.rename({ sessionId, title })
   await deliverPrompt(ctx, sessionId, options.message)
 
-  return { sessionId, created: true }
+  return { sessionId, action: 'created' }
 }
 
 async function findSessionTitled(
