@@ -1,10 +1,10 @@
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context, Logger } from '@deepseek-ai/cordis'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { renderJson } from '../shared/tool.ts'
 import { reviseSelf } from './store.ts'
 
-export function registerSelfTools(scope: Context, workspace: Workspace): () => void {
+export function registerSelfTools(scope: Context, workspace: Workspace, log: Logger): () => void {
   return scope.tools.register(defineTool({
     name: 'self_revise',
     description: [
@@ -47,18 +47,23 @@ export function registerSelfTools(scope: Context, workspace: Workspace): () => v
     },
     async execute(args) {
       try {
-        return {
-          ok: true,
-          text: reviseSelf(workspace.path, args.changes),
-        }
+        const text = reviseSelf(workspace.path, args.changes)
+        const lines = text === ''
+          ? 0
+          : text.split('\n').length
+
+        log.info('self revised', args.changes.length, 'changes', lines, 'lines')
+
+        return { ok: true, text }
       }
       catch (error: unknown) {
-        return {
-          ok: false,
-          error: error instanceof Error
-            ? error.message
-            : String(error),
-        }
+        const message = error instanceof Error
+          ? error.message
+          : String(error)
+
+        log.warn('self revise failed', message)
+
+        return { ok: false, error: message }
       }
     },
   }))

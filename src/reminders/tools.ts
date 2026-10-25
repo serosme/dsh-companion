@@ -1,9 +1,9 @@
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context, Logger } from '@deepseek-ai/cordis'
 import type { Reminders } from './scheduler.ts'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { renderJson } from '../shared/tool.ts'
 
-export function registerReminderTools(scope: Context, reminders: Reminders): () => void {
+export function registerReminderTools(scope: Context, reminders: Reminders, log: Logger): () => void {
   const disposers = [
     scope.tools.register(defineTool({
       name: 'reminder_create',
@@ -33,6 +33,9 @@ export function registerReminderTools(scope: Context, reminders: Reminders): () 
         try {
           const task = reminders.add(args.message, args.cron)
           const next = reminders.nextRunAt(task.id)
+
+          log.info('reminder created', task.id, task.cron, 'next', next ?? '-')
+
           return {
             ok: true,
             id: task.id,
@@ -42,12 +45,13 @@ export function registerReminderTools(scope: Context, reminders: Reminders): () 
           }
         }
         catch (error: unknown) {
-          return {
-            ok: false,
-            error: error instanceof Error
-              ? error.message
-              : String(error),
-          }
+          const message = error instanceof Error
+            ? error.message
+            : String(error)
+
+          log.warn('reminder create failed', args.cron, message)
+
+          return { ok: false, error: message }
         }
       },
     })),
@@ -75,8 +79,11 @@ export function registerReminderTools(scope: Context, reminders: Reminders): () 
         render: renderJson,
       },
       async execute() {
+        log.info('reminder list', reminders.list.length)
+
         return reminders.list.map((task) => {
           const next = reminders.nextRunAt(task.id)
+
           return {
             id: task.id,
             message: task.message,
@@ -110,9 +117,14 @@ export function registerReminderTools(scope: Context, reminders: Reminders): () 
         render: renderJson,
       },
       async execute(args) {
-        return {
-          ok: reminders.cancel(args.id),
-        }
+        const cancelled = reminders.cancel(args.id)
+
+        if (cancelled)
+          log.info('reminder cancelled', args.id)
+        else
+          log.warn('reminder cancel missed', args.id)
+
+        return { ok: cancelled }
       },
     })),
   ]

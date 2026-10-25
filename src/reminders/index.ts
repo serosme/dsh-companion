@@ -33,7 +33,7 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
 
     scope.effect(() => {
       const disposers = [
-        registerReminderTools(scope, reminders),
+        registerReminderTools(scope, reminders, ctx.logger()),
         hideScheduleTools(ctx, scope),
       ]
 
@@ -49,7 +49,11 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
 
 function hideScheduleTools(ctx: Context, scope: Context): () => void {
   try {
-    return scope.tools.restrict({ deny: SCHEDULE_TOOLS })
+    const dispose = scope.tools.restrict({ deny: SCHEDULE_TOOLS })
+
+    ctx.logger().info('schedule tools hidden', SCHEDULE_TOOLS.length)
+
+    return dispose
   }
   catch (error: unknown) {
     ctx.logger().warn('failed to hide schedule tools', error)

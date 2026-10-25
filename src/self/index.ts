@@ -29,7 +29,7 @@ export function attachSelf(ctx: Context, workspace: Workspace): void {
           text: () => renderSelf(workspace.path),
           interpolate: false,
         }),
-        registerSelfTools(scope, workspace),
+        registerSelfTools(scope, workspace, ctx.logger()),
       ]
 
       return () => {
