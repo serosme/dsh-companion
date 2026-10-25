@@ -1,15 +1,9 @@
 import type { Context } from '@deepseek-ai/cordis'
-import type { Workspace } from '@deepseek-ai/dsh-workspace'
-import type Conf from 'conf'
-import type { CompanionState } from '../state/store.ts'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import { deliverPrompt } from '../session/deliver.ts'
+import type { TodayDeliveryOptions } from '../session/deliver.ts'
+import { deliverToToday } from '../session/deliver.ts'
 
-export interface WakeupOptions {
-  readonly workspace: Workspace
-  readonly message: string
+export interface WakeupOptions extends TodayDeliveryOptions {
   readonly signal: AbortSignal
-  readonly state: Conf<CompanionState>
 }
 
 export function wakeTodaySession(ctx: Context, options: WakeupOptions): void {
@@ -22,27 +16,8 @@ export function wakeTodaySession(ctx: Context, options: WakeupOptions): void {
 }
 
 async function wake(ctx: Context, options: WakeupOptions): Promise<void> {
-  const log = ctx.logger()
-  const stored = options.state.get('todaySessionId')
+  const sessionId = await deliverToToday(ctx, options)
 
-  if (stored === '') {
-    log.info('no stored today session to wake')
-    return
-  }
-
-  const sessionId = SessionId(stored)
-
-  if (!options.workspace.sessionIds.includes(sessionId)) {
-    log.info('stored today session is not in workspace', stored)
-    return
-  }
-
-  if (ctx.workspaceRegistry.archivedSessionIds.includes(sessionId)) {
-    log.info('stored today session is archived', stored)
-    return
-  }
-
-  await deliverPrompt(ctx, sessionId, options.message)
-
-  log.info('woke today session', stored)
+  if (sessionId !== undefined)
+    ctx.logger().info('woke today session', sessionId)
 }

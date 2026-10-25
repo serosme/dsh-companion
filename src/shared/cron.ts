@@ -6,7 +6,11 @@ export interface CronOptions {
   readonly onTick: () => void
 }
 
+export function normalizeCron(cron: string): string {
+  return cron.replaceAll('?', '*')
+}
+
 export function startCron(options: CronOptions): () => void {
-  const job = new Cron(options.cron, { timezone: TIME_ZONE }, options.onTick)
+  const job = new Cron(normalizeCron(options.cron), { timezone: TIME_ZONE }, options.onTick)
   return () => job.stop()
 }

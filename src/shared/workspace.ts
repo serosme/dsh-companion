@@ -19,7 +19,7 @@ export function requireWorkspace(ctx: Context, workspacePath: string): Workspace
 
   const workspace = ctx.workspaceRegistry.list().find(item => samePath(item.path, path))
   if (workspace === undefined)
-    throw new Error(`workspacePath ${path} 不是已注册的工作区`)
+    throw new Error(`workspacePath ${path} is not a registered workspace`)
 
   return workspace
 }

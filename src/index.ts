@@ -4,7 +4,12 @@ import { attachBase } from './base/index.ts'
 import { attachLogger } from './logger.ts'
 
 export const name = 'dsh-companion'
-export const inject = ['sessionController', 'workspaceRegistry']
+export const inject = [
+  'sessionController',
+  'workspaceRegistry',
+  'tools',
+  'agents',
+]
 
 export { Config } from './base/index.ts'
 
