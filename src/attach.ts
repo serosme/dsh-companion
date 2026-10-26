@@ -30,7 +30,7 @@ export function attachCompanion(ctx: Context, config: ConfigValue): void {
       workspace,
       state,
       agentPreset: config.agentPreset,
-      message: formatEvent(config.daily.label, Date.now(), 'day'),
+      message: formatEvent(config.daily.label),
     }),
   })
 

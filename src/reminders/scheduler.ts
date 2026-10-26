@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto'
 import { Cron } from 'croner'
 import { deliverToToday } from '../session/deliver.ts'
 import { normalizeCron } from '../shared/cron.ts'
+import { formatReminderEvent } from '../shared/events.ts'
 import { formatTime, TIME_ZONE } from '../shared/time.ts'
 import { openReminders } from './store.ts'
 
@@ -36,20 +37,23 @@ export class Reminders {
 
   load(): void {
     const stored = this.conf.get('reminders')
+    const log = this.ctx.logger()
 
     const kept = stored.filter((task) => {
       try {
         this.arm(task)
         return true
       }
-      catch {
-        return task.status === 'failed'
+      catch (error: unknown) {
+        // 排不出下一次执行的任务永远不会再触发 留着只会越积越多
+        log.warn('dropping unfireable reminder', task.id, task.cron, error)
+        return false
       }
     })
 
     this.tasks = kept
 
-    this.ctx.logger().info('reminders loaded', kept.length, 'of', stored.length, 'armed', this.timers.size)
+    log.info('reminders loaded', kept.length, 'of', stored.length, 'armed', this.timers.size)
 
     if (kept.length !== stored.length)
       this.persist()
@@ -155,7 +159,8 @@ export class Reminders {
       return await deliverToToday(this.ctx, {
         workspace: this.workspace,
         state: this.state,
-        message: task.message,
+        // 包成提醒事件 否则到点那句话和用户刚说的话在会话里长得一样
+        message: formatReminderEvent(task.message),
       }) !== undefined
     }
     catch (error: unknown) {
@@ -166,10 +171,10 @@ export class Reminders {
 
   private settle(task: Reminder, delivered: boolean): void {
     const log = this.ctx.logger()
-    // 一次性 cron 投完就没有下一拍 这时才把任务摘掉 其余的留着重试
-    const exhausted = delivered && this.timers.get(task.id)?.nextRun() === null
+    // 没有下一拍就是最后一次 送到没送到都不该再留在列表里
+    const last = (this.timers.get(task.id)?.nextRun() ?? null) === null
 
-    if (exhausted) {
+    if (last) {
       this.stop(task.id)
       this.tasks = this.tasks.filter(item => item.id !== task.id)
     }
@@ -189,6 +194,6 @@ export class Reminders {
     if (delivered)
       log.info('reminder fired', task.id, task.message)
     else
-      log.info('reminder not delivered, kept for retry', task.id)
+      log.warn('reminder not delivered', task.id, last ? 'expired' : 'kept for retry')
   }
 }

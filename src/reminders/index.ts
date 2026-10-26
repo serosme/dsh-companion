@@ -7,8 +7,11 @@ import { attachWorkspaceAgents } from '../shared/agent-scope.ts'
 import { Reminders } from './scheduler.ts'
 import { registerReminderTools } from './tools.ts'
 
-// reminder_create 的触发时机 以后才发生的事 当场定下来 别只嘴上答应
-const REMINDER_GUIDANCE = '他说了以后才发生的事（明天、下午三点、下个月这种），当场用 reminder_create 定下来，别只口头答应。'
+// reminder_create 的触发时机 以后才发生的事 当场定下来 到点会以事件回来
+const REMINDER_GUIDANCE = [
+  '他说了以后才发生的事，当场用 reminder_create 定下来，别只口头答应。',
+  '到点会以 提醒 事件回到这个会话，那时你接着那件事说。',
+].join('')
 
 export interface RemindersOptions {
   readonly workspace: Workspace

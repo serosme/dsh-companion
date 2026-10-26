@@ -1,18 +1,15 @@
-import { formatDay, formatStamp } from './time.ts'
-
 // 固定词 标记这是时钟投递而不是用户发言 标签可配置 所以语义不能压在标签上
 const EVENT_MARKER = '事件'
 
-// 只用 事件 竖线 和空格 不套括号 在中文里也够显眼
-// 时间戳取送达时刻而不是计划时刻 晚到的唤醒就该显示晚到
-export function formatEvent(
-  label: string,
-  at: number = Date.now(),
-  precision: 'day' | 'minute' = 'minute',
-): string {
-  const stamp = precision === 'day'
-    ? formatDay(at)
-    : formatStamp(at)
+// 提醒到点用的标签 和日报 唤醒并列 三种事件在提示词里各有各的说法
+const REMINDER_EVENT_LABEL = '提醒'
 
-  return `${EVENT_MARKER} | ${label} ${stamp}`
+// 只带标签不带时间 每次请求的运行时上下文里已经有当前时间 写两遍反而可能对不上
+export function formatEvent(label: string): string {
+  return `${EVENT_MARKER} | ${label}`
+}
+
+// 提醒事件把当初写下的那句话接在信封后面 让模型知道该接着哪件事说
+export function formatReminderEvent(note: string): string {
+  return `${formatEvent(REMINDER_EVENT_LABEL)} ${note}`
 }

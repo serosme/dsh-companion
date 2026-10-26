@@ -8,7 +8,7 @@ export function registerReminderTools(scope: Context, reminders: Reminders, log:
     scope.tools.register(defineTool({
       name: 'reminder_create',
       description: [
-        '给自己留一个定时提醒。到点会把这句话投进今天的会话，由那时的你决定怎么开口。',
+        '给自己留一个定时提醒，到点会把这句话投进今天的会话。',
         'message 要写成给未来的自己看的话，不要写成发给他的通知。比如写成：他上午让你下午三点提醒他开会。现在到点了。',
         'cron 支持秒和年：一次性写成 0 0 15 25 10 * 2026 表示 2026 年 10 月 25 日 15:00，每天写成 0 0 9 * * *。',
       ].join(''),
