@@ -1,27 +1,26 @@
 import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-system-prompt'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import type Conf from 'conf'
-import type { CompanionState } from '../state/store.ts'
-import { attachWorkspaceAgents } from '../shared/agents.ts'
+import type { CompanionState } from '../session/state.ts'
+import { attachWorkspaceAgents } from '../shared/agent-scope.ts'
 import { Reminders } from './scheduler.ts'
 import { registerReminderTools } from './tools.ts'
 
-const SCHEDULE_TOOLS = [
-  'schedule_create',
-  'schedule_delete',
-  'schedule_list',
-  'schedule_update',
-]
+// reminder_create 的触发时机 以后才发生的事 当场定下来 别只嘴上答应
+const REMINDER_GUIDANCE = '他说了以后才发生的事（明天、下午三点、下个月这种），当场用 reminder_create 定下来，别只口头答应。'
 
 export interface RemindersOptions {
   readonly workspace: Workspace
   readonly state: Conf<CompanionState>
 }
 
+// 提醒的计时器和它的三个工具 还有没有别的工具由 preset 决定 不归这里管
 export function attachReminders(ctx: Context, options: RemindersOptions): void {
+  const log = ctx.logger()
   const reminders = new Reminders(ctx, options.workspace, options.state)
 
-  ctx.logger().info('reminders file', reminders.path)
+  log.info('reminders file', reminders.path)
 
   ctx.effect(() => {
     reminders.load()
@@ -33,8 +32,13 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
 
     scope.effect(() => {
       const disposers = [
-        registerReminderTools(scope, reminders, ctx.logger()),
-        hideScheduleTools(ctx, scope),
+        registerReminderTools(scope, reminders, log),
+        scope.systemPrompt.section({
+          name: 'companion:reminders',
+          // 第二个工具说明位 排在 self 的触发段之后
+          order: scope.systemPrompt.getSectionOrder('PLAN_POLICY') + 2,
+          text: REMINDER_GUIDANCE,
+        }),
       ]
 
       return () => {
@@ -43,20 +47,6 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
       }
     }, `dsh-companion:reminders:${String(agent.session.id)}`)
 
-    ctx.logger().info('reminder tools attached to', String(agent.session.id))
+    log.info('reminder tools attached to', String(agent.session.id))
   })
-}
-
-function hideScheduleTools(ctx: Context, scope: Context): () => void {
-  try {
-    const dispose = scope.tools.restrict({ deny: SCHEDULE_TOOLS })
-
-    ctx.logger().info('schedule tools hidden', SCHEDULE_TOOLS.length)
-
-    return dispose
-  }
-  catch (error: unknown) {
-    ctx.logger().warn('failed to hide schedule tools', error)
-    return () => {}
-  }
 }

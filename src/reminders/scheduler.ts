@@ -1,7 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import type Conf from 'conf'
-import type { CompanionState } from '../state/store.ts'
+import type { CompanionState } from '../session/state.ts'
 import type { Reminder, RemindersData } from './store.ts'
 import { randomUUID } from 'node:crypto'
 import { Cron } from 'croner'
@@ -16,6 +16,7 @@ export class Reminders {
   private readonly state: Conf<CompanionState>
   private readonly conf: Conf<RemindersData>
   private readonly timers = new Map<string, Cron>()
+  private readonly inFlight = new Set<string>()
   private tasks: Reminder[] = []
 
   constructor(ctx: Context, workspace: Workspace, state: Conf<CompanionState>) {
@@ -127,35 +128,54 @@ export class Reminders {
     this.timers.delete(id)
   }
 
+  // 到点 投递一次 再按结果收尾 上一次还没投完就跳过这一拍 避免重叠
   private async fire(id: string): Promise<void> {
-    const log = this.ctx.logger()
     const task = this.tasks.find(item => item.id === id)
 
     if (task === undefined)
       return
 
-    let delivered = false
+    if (this.inFlight.has(id)) {
+      this.ctx.logger().info('reminder still delivering, skip tick', id)
+      return
+    }
+
+    this.inFlight.add(id)
 
     try {
-      delivered = await deliverToToday(this.ctx, {
+      this.settle(task, await this.deliver(task))
+    }
+    finally {
+      this.inFlight.delete(id)
+    }
+  }
+
+  private async deliver(task: Reminder): Promise<boolean> {
+    try {
+      return await deliverToToday(this.ctx, {
         workspace: this.workspace,
         state: this.state,
         message: task.message,
       }) !== undefined
     }
     catch (error: unknown) {
-      log.error('failed to fire reminder', id, error)
+      this.ctx.logger().error('failed to fire reminder', task.id, error)
+      return false
     }
+  }
 
-    const exhausted = delivered && this.timers.get(id)?.nextRun() === null
+  private settle(task: Reminder, delivered: boolean): void {
+    const log = this.ctx.logger()
+    // 一次性 cron 投完就没有下一拍 这时才把任务摘掉 其余的留着重试
+    const exhausted = delivered && this.timers.get(task.id)?.nextRun() === null
 
     if (exhausted) {
-      this.stop(id)
-      this.tasks = this.tasks.filter(item => item.id !== id)
+      this.stop(task.id)
+      this.tasks = this.tasks.filter(item => item.id !== task.id)
     }
     else {
       const at = formatTime(Date.now())
-      this.tasks = this.tasks.map(item => item.id === id
+      this.tasks = this.tasks.map(item => item.id === task.id
         ? {
             ...item,
             status: delivered ? 'delivered' : 'failed',
@@ -167,8 +187,8 @@ export class Reminders {
     this.persist()
 
     if (delivered)
-      log.info('reminder fired', id, task.message)
+      log.info('reminder fired', task.id, task.message)
     else
-      log.info('reminder not delivered, kept for retry', id)
+      log.info('reminder not delivered, kept for retry', task.id)
   }
 }

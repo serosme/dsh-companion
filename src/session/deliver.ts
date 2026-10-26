@@ -2,7 +2,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import type Conf from 'conf'
-import type { CompanionState } from '../state/store.ts'
+import type { CompanionState } from './state.ts'
 import { createUserMessage } from '@deepseek-ai/dsh-llm/message'
 import { SessionId as toSessionId } from '@deepseek-ai/dsh-session'
 
@@ -12,7 +12,8 @@ declare module '@deepseek-ai/dsh-llm/message' {
   }
 }
 
-export interface TodayDeliveryOptions {
+// 一次投递需要的全部东西 投给谁由 state 决定
+export interface Delivery {
   readonly workspace: Workspace
   readonly state: Conf<CompanionState>
   readonly message: string
@@ -31,9 +32,10 @@ export async function deliverPrompt(ctx: Context, sessionId: SessionId, text: st
   }))
 }
 
+// 投进当天会话 没有可用会话时返回 undefined 由调用方决定算不算失败
 export async function deliverToToday(
   ctx: Context,
-  options: TodayDeliveryOptions,
+  options: Delivery,
 ): Promise<SessionId | undefined> {
   const log = ctx.logger()
   const stored = options.state.get('todaySessionId')

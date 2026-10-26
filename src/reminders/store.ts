@@ -1,6 +1,7 @@
-import Conf from 'conf'
+import type Conf from 'conf'
+import { openStore } from '../shared/conf.ts'
 
-export type ReminderStatus = 'pending' | 'delivered' | 'failed'
+type ReminderStatus = 'pending' | 'delivered' | 'failed'
 
 export interface Reminder {
   id: string
@@ -15,11 +16,5 @@ export interface RemindersData {
 }
 
 export function openReminders(workspacePath: string): Conf<RemindersData> {
-  return new Conf<RemindersData>({
-    cwd: workspacePath,
-    configName: 'reminders',
-    defaults: {
-      reminders: [],
-    },
-  })
+  return openStore<RemindersData>(workspacePath, 'reminders', { reminders: [] })
 }

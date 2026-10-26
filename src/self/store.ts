@@ -1,37 +1,35 @@
-import Conf from 'conf'
+import { openStore } from '../shared/conf.ts'
 
-export interface SelfChange {
+interface SelfChange {
   readonly op: 'add' | 'replace' | 'remove'
   readonly text: string
   readonly newText?: string
   readonly before?: string
 }
 
-export interface SelfData {
+interface SelfData {
   lines: string[]
 }
 
-function openSelf(workspacePath: string): Conf<SelfData> {
-  return new Conf<SelfData>({
-    cwd: workspacePath,
-    configName: 'self',
-    defaults: {
-      lines: [],
+export interface SelfStore {
+  render: () => string
+  revise: (changes: readonly SelfChange[]) => string
+}
+
+// 人格文件只开一次 render 每个请求都会调用 不该每次都读盘
+export function createSelfStore(workspacePath: string): SelfStore {
+  const conf = openStore<SelfData>(workspacePath, 'self', { lines: [] })
+
+  return {
+    render: () => conf.get('lines').join('\n'),
+    revise: (changes) => {
+      const next = applyChanges(conf.get('lines'), changes)
+
+      conf.set('lines', next)
+
+      return next.join('\n')
     },
-  })
-}
-
-export function renderSelf(workspacePath: string): string {
-  return openSelf(workspacePath).get('lines').join('\n')
-}
-
-export function reviseSelf(workspacePath: string, changes: readonly SelfChange[]): string {
-  const conf = openSelf(workspacePath)
-  const next = applyChanges(conf.get('lines'), changes)
-
-  conf.set('lines', next)
-
-  return next.join('\n')
+  }
 }
 
 function applyChanges(lines: readonly string[], changes: readonly SelfChange[]): string[] {
