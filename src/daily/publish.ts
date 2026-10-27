@@ -5,5 +5,5 @@ import type {} from './events.ts'
 export function publishDaily(ctx: Context): void {
   console.log('daily published')
 
-  ctx.emit('companion/daily')
+  ctx.emit('self/daily')
 }

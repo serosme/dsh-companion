@@ -3,7 +3,7 @@ import type { SessionSummary } from '@deepseek-ai/dsh-api-session-controller'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import type Conf from 'conf'
-import type { CompanionState } from './state.ts'
+import type { RuntimeState } from './state.ts'
 import { SessionId as toSessionId } from '@deepseek-ai/dsh-session'
 import { todayTitle } from '../shared/time.ts'
 import { samePath } from '../shared/workspace.ts'
@@ -12,7 +12,7 @@ const LIST_TIMEOUT_MS = 10_000
 
 export interface TodaySessionOptions {
   readonly workspace: Workspace
-  readonly state: Conf<CompanionState>
+  readonly state: Conf<RuntimeState>
   // 新建会话跑的 preset 不给就用 roster 默认值
   readonly agentPreset: string
 }

@@ -9,9 +9,9 @@ import { registerReminderTools } from './tools.ts'
 // reminder_create 的触发时机 以后才发生的事 当场定下来 到点会以事件回来
 const REMINDER_GUIDANCE = [
   '他说了以后才发生的事，当场用 reminder_create 定下来，别只口头答应。',
-  '定之前先 current_time 拿到现在的准确时间再算 cron，别估。',
-  '到点会以 提醒 事件回到这个会话，那时你接着那件事说。',
-].join('')
+  '算 cron 之前先调 current_time 拿准现在几点，别估。',
+  '到点它会以「提醒」事件回来，接着那件事说就行，不用重述整件事。',
+].join('\n')
 
 export interface RemindersOptions {
   readonly workspace: Workspace
@@ -19,7 +19,7 @@ export interface RemindersOptions {
 }
 
 // 提醒的计时器和它的三个工具 还有没有别的工具由 preset 决定 不归这里管
-export function attachReminders(ctx: Context, options: RemindersOptions): void {
+export function attachReminders(ctx: Context, options: RemindersOptions): Reminders {
   const reminders = new Reminders(options.workspace.path, options.outbox)
 
   console.log('reminders file', reminders.path)
@@ -36,8 +36,8 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
       const disposers = [
         registerReminderTools(scope, reminders),
         scope.systemPrompt.section({
-          name: 'companion:reminders',
-          // 第二个工具说明位 排在 self 的触发段之后
+          name: 'self:reminders',
+          // 第二个工具说明位 排在 self:remember 之后
           order: scope.systemPrompt.getSectionOrder('PLAN_POLICY') + 2,
           text: REMINDER_GUIDANCE,
         }),
@@ -51,4 +51,6 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
 
     console.log('attached reminders to', String(agent.session.id))
   })
+
+  return reminders
 }

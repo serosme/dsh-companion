@@ -3,14 +3,14 @@ import type { MessageSource } from '@deepseek-ai/dsh-llm/message'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import type Conf from 'conf'
-import type { CompanionState } from './state.ts'
+import type { RuntimeState } from './state.ts'
 import { createUserMessage } from '@deepseek-ai/dsh-llm/message'
 import { SessionId as toSessionId } from '@deepseek-ai/dsh-session'
 
 declare module '@deepseek-ai/dsh-llm/message' {
   interface MessageSourceMap {
-    companion: { kind: 'companion' }
-    qq: { kind: 'qq' }
+    self: { kind: 'self' }
+    him: { kind: 'him' }
   }
 }
 
@@ -22,7 +22,7 @@ export interface Outbox {
 // 投递需要的全部东西 投给谁由 state 决定
 interface Delivery {
   readonly workspace: Workspace
-  readonly state: Conf<CompanionState>
+  readonly state: Conf<RuntimeState>
   readonly message: string
   readonly source?: MessageSource
 }
@@ -70,7 +70,7 @@ async function deliverToToday(
     return undefined
   }
 
-  await deliverPrompt(ctx, sessionId, options.message, options.source ?? { kind: 'companion' })
+  await deliverPrompt(ctx, sessionId, options.message, options.source ?? { kind: 'self' })
 
   return sessionId
 }
@@ -79,7 +79,7 @@ async function deliverToToday(
 export function createOutbox(
   ctx: Context,
   workspace: Workspace,
-  state: Conf<CompanionState>,
+  state: Conf<RuntimeState>,
 ): Outbox {
   return {
     // 投一条消息进今天那条会话 送达返回 true

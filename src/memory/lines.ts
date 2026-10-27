@@ -16,7 +16,7 @@ export interface LineStore {
   revise: (changes: readonly LineChange[]) => string
 }
 
-// 一份设定就是工作区里的一个 JSON 文件 self 和 profile 共用这套读写
+// 一份设定就是工作区里的一个 JSON 文件 self 和 him 共用这套读写
 // 挂载时各开一次 render 每个请求都会调用 不必每次现开
 export function createLineStore(workspacePath: string, configName: string): LineStore {
   const conf = openStore<LineData>(workspacePath, configName, { lines: [] })

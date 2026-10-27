@@ -28,6 +28,11 @@ export class Reminders {
     return this.tasks
   }
 
+  // 真正挂在计时器上的条数 失败留下来的任务不算
+  get scheduled(): number {
+    return this.timers.size
+  }
+
   load(): void {
     const stored = this.conf.get('reminders')
 

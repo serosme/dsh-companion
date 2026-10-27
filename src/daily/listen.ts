@@ -3,14 +3,14 @@ import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import type Conf from 'conf'
 import type { ConfigValue } from '../config.ts'
 import type { Outbox } from '../core/outbox.ts'
-import type { CompanionState } from '../core/state.ts'
+import type { RuntimeState } from '../core/state.ts'
 import type {} from './events.ts'
 import { ensureTodaySession } from '../core/session.ts'
 import { formatEvent } from '../shared/events.ts'
 
 export interface DailyOptions {
   readonly workspace: Workspace
-  readonly state: Conf<CompanionState>
+  readonly state: Conf<RuntimeState>
   readonly outbox: Outbox
   readonly agentPreset: string
   readonly config: ConfigValue['daily']
@@ -49,7 +49,7 @@ async function openToday(ctx: Context, options: DailyOptions): Promise<void> {
 // 收到事件就去准备会话 失败只打日志 不往外抛
 export function listenDaily(ctx: Context, options: DailyOptions): void {
   // 监听随插件执行域释放 不用手动注销
-  ctx.on('companion/daily', () => {
+  ctx.on('self/daily', () => {
     console.log('daily received')
 
     void openToday(ctx, options).catch((error: unknown) => {

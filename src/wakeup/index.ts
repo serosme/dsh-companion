@@ -8,6 +8,8 @@ import { publishWakeup } from './publish.ts'
 export interface WakeupOptions {
   readonly outbox: Outbox
   readonly config: ConfigValue['wakeup']
+  // 醒过来时附在事件后面的此刻情况
+  readonly describe: () => string
 }
 
 // 到点只发事件 不碰投递
@@ -23,7 +25,7 @@ function scheduleWakeup(ctx: Context, config: ConfigValue['wakeup']): void {
 // 只负责把监听和定时器组装起来
 export function attachWakeup(ctx: Context, options: WakeupOptions): void {
   // 先挂监听 再开定时器
-  listenWakeup(ctx, options.outbox)
+  listenWakeup(ctx, options.outbox, options.describe)
 
   // 开启定时发布
   scheduleWakeup(ctx, options.config)

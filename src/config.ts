@@ -18,7 +18,7 @@ export const Config = Schema.object({
   }),
   wakeup: Schema.object({
     cron: Schema.string()
-      .default('0 */30 7-23 * * * *'),
+      .default('0 0 7-23 * * * *'),
   }),
   qq: Schema.object({
     // 不填 wsUrl 或 allowPrivate 就整块跳过 不连 socket

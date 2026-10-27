@@ -1,6 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { ConfigValue } from './config.ts'
-import { attachCompanion } from './attach.ts'
+import { attachAll } from './attach.ts'
 
 export const name = 'dsh-companion'
 export const inject = [
@@ -14,6 +14,6 @@ export const inject = [
 export { Config } from './config.ts'
 
 export function apply(ctx: Context, config: ConfigValue): void {
-  attachCompanion(ctx, config)
+  attachAll(ctx, config)
   console.log('plugin loaded')
 }

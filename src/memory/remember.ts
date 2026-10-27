@@ -1,20 +1,20 @@
 import type { Context } from '@deepseek-ai/cordis'
-import type { LineStore } from './store.ts'
+import type { LineStore } from './lines.ts'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { jsonOutput } from '../shared/tool.ts'
 
 export interface LineStores {
   readonly self: LineStore
-  readonly profile: LineStore
+  readonly him: LineStore
 }
 
-export function registerSelfTools(scope: Context, stores: LineStores): () => void {
+export function registerRememberTool(scope: Context, stores: LineStores): () => void {
   return scope.tools.register(defineTool({
-    name: 'self_revise',
+    name: 'remember',
     description: [
-      '修改你的设定，会注入系统提示的末尾；为空表示还没有任何设定。',
-      'target 是 self 时改关于你的：名字、自称、语气、怎么称呼他、你反复做错的事。',
-      'target 是 profile 时改关于他的：姓名、作息、家人、工作、喜好、忌讳，只记长期成立的事。',
+      '把值得留下的事记下来，会注入系统提示的末尾；空表示还没记过。',
+      'target 是 self 时记关于你的：名字、自称、语气、怎么称呼他、你反复做错的事。',
+      'target 是 him 时记关于他的：姓名、作息、家人、工作、喜好、忌讳，只记长期成立的事。',
       '改已有内容用 replace 或 remove，不要用 add 叠加；新的说法和旧行冲突时，把旧行一起改掉。',
       '只能逐行增、改、删，changes 里：add 追加一行，可用 before 指定插到哪一行前面；replace 把 text 那一行换成 newText；remove 删掉 text 那一行。',
     ].join(''),
@@ -22,8 +22,8 @@ export function registerSelfTools(scope: Context, stores: LineStores): () => voi
       target: {
         type: 'string',
         required: true,
-        enum: ['self', 'profile'],
-        description: 'self 写关于你的设定 profile 写关于他的事实',
+        enum: ['self', 'him'],
+        description: 'self 记关于你的 him 记关于他的',
       },
       changes: {
         type: 'array',
@@ -53,8 +53,8 @@ export function registerSelfTools(scope: Context, stores: LineStores): () => voi
       },
     }),
     async execute(args) {
-      const store = args.target === 'profile'
-        ? stores.profile
+      const store = args.target === 'him'
+        ? stores.him
         : stores.self
 
       // 行匹配不上就在这里抛 由宿主把原因转成错误结果交给模型
@@ -63,7 +63,7 @@ export function registerSelfTools(scope: Context, stores: LineStores): () => voi
         ? 0
         : text.split('\n').length
 
-      console.log('self revised', args.target, args.changes.length, 'changes', lines, 'lines')
+      console.log('remembered', args.target, args.changes.length, 'changes', lines, 'lines')
 
       return { ok: true as const, text }
     },

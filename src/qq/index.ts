@@ -35,7 +35,7 @@ export function attachQq(ctx: Context, options: QqOptions): void {
         return
 
       // 来自 QQ 的消息标上自己的来源 历史里能看出不是这里说的
-      void options.outbox.send(formatInbound(inbound), { kind: 'qq' })
+      void options.outbox.send(formatInbound(inbound), { kind: 'him' })
         .then((delivered) => {
           if (delivered)
             console.log('qq message from', inbound.userId, 'delivered')

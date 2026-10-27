@@ -6,5 +6,5 @@ export function publishWakeup(ctx: Context): void {
   console.log('wakeup published')
 
   // 派发给所有订阅这个事件的监听器
-  ctx.emit('companion/wakeup')
+  ctx.emit('self/wakeup')
 }
