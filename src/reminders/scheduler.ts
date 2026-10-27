@@ -1,30 +1,23 @@
-import type { Context } from '@deepseek-ai/cordis'
-import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import type Conf from 'conf'
-import type { CompanionState } from '../session/state.ts'
+import type { Outbox } from '../core/outbox.ts'
 import type { Reminder, RemindersData } from './store.ts'
 import { randomUUID } from 'node:crypto'
 import { Cron } from 'croner'
-import { deliverToToday } from '../session/deliver.ts'
 import { normalizeCron } from '../shared/cron.ts'
 import { formatReminderEvent } from '../shared/events.ts'
 import { formatTime, TIME_ZONE } from '../shared/time.ts'
 import { openReminders } from './store.ts'
 
 export class Reminders {
-  private readonly ctx: Context
-  private readonly workspace: Workspace
-  private readonly state: Conf<CompanionState>
+  private readonly outbox: Outbox
   private readonly conf: Conf<RemindersData>
   private readonly timers = new Map<string, Cron>()
   private readonly inFlight = new Set<string>()
   private tasks: Reminder[] = []
 
-  constructor(ctx: Context, workspace: Workspace, state: Conf<CompanionState>) {
-    this.ctx = ctx
-    this.workspace = workspace
-    this.state = state
-    this.conf = openReminders(workspace.path)
+  constructor(workspacePath: string, outbox: Outbox) {
+    this.outbox = outbox
+    this.conf = openReminders(workspacePath)
   }
 
   get path(): string {
@@ -157,18 +150,8 @@ export class Reminders {
   }
 
   private async deliver(task: Reminder): Promise<boolean> {
-    try {
-      return await deliverToToday(this.ctx, {
-        workspace: this.workspace,
-        state: this.state,
-        // 包成提醒事件 否则到点那句话和用户刚说的话在会话里长得一样
-        message: formatReminderEvent(task.message),
-      }) !== undefined
-    }
-    catch (error: unknown) {
-      console.error('failed to fire reminder', task.id, error)
-      return false
-    }
+    // 包成提醒事件 否则到点那句话和用户刚说的话在会话里长得一样
+    return await this.outbox.send(formatReminderEvent(task.message))
   }
 
   private settle(task: Reminder, delivered: boolean): void {

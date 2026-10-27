@@ -1,8 +1,5 @@
 import type { Context } from '@deepseek-ai/cordis'
-import type { Workspace } from '@deepseek-ai/dsh-workspace'
-import type Conf from 'conf'
-import type { CompanionState } from '../session/state.ts'
-import { deliverToToday } from '../session/deliver.ts'
+import type { Outbox } from '../core/outbox.ts'
 import { formatInbound, normalizeAllow, readPrivateMessage } from './inbound.ts'
 import { connectSocket } from './socket.ts'
 
@@ -13,8 +10,7 @@ export interface QqConfig {
 }
 
 export interface QqOptions {
-  readonly workspace: Workspace
-  readonly state: Conf<CompanionState>
+  readonly outbox: Outbox
   readonly config: QqConfig
 }
 
@@ -38,18 +34,11 @@ export function attachQq(ctx: Context, options: QqOptions): void {
       if (inbound === undefined)
         return
 
-      void deliverToToday(ctx, {
-        workspace: options.workspace,
-        state: options.state,
-        source: { kind: 'qq' },
-        message: formatInbound(inbound),
-      })
-        .then((sessionId) => {
-          if (sessionId === undefined)
+      // 来自 QQ 的消息标上自己的来源 历史里能看出不是这里说的
+      void options.outbox.send(formatInbound(inbound), { kind: 'qq' })
+        .then((delivered) => {
+          if (!delivered)
             console.warn('qq message dropped, no today session', inbound.userId)
-        })
-        .catch((error: unknown) => {
-          console.error('qq message delivery failed', error)
         })
     },
   })

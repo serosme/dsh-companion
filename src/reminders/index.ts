@@ -1,8 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
-import type Conf from 'conf'
-import type { CompanionState } from '../session/state.ts'
+import type { Outbox } from '../core/outbox.ts'
 import { attachWorkspaceAgents } from '../shared/agent-scope.ts'
 import { Reminders } from './scheduler.ts'
 import { registerReminderTools } from './tools.ts'
@@ -16,12 +15,12 @@ const REMINDER_GUIDANCE = [
 
 export interface RemindersOptions {
   readonly workspace: Workspace
-  readonly state: Conf<CompanionState>
+  readonly outbox: Outbox
 }
 
 // 提醒的计时器和它的三个工具 还有没有别的工具由 preset 决定 不归这里管
 export function attachReminders(ctx: Context, options: RemindersOptions): void {
-  const reminders = new Reminders(ctx, options.workspace, options.state)
+  const reminders = new Reminders(options.workspace.path, options.outbox)
 
   console.log('reminders file', reminders.path)
 

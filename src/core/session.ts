@@ -1,78 +1,47 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { SessionSummary } from '@deepseek-ai/dsh-api-session-controller'
 import type { SessionId } from '@deepseek-ai/dsh-session'
-import type { Delivery } from './deliver.ts'
+import type { Workspace } from '@deepseek-ai/dsh-workspace'
+import type Conf from 'conf'
+import type { CompanionState } from './state.ts'
 import { SessionId as toSessionId } from '@deepseek-ai/dsh-session'
 import { todayTitle } from '../shared/time.ts'
 import { samePath } from '../shared/workspace.ts'
-import { deliverPrompt } from './deliver.ts'
 
 const LIST_TIMEOUT_MS = 10_000
 
-export interface TodaySessionOptions extends Delivery {
+export interface TodaySessionOptions {
+  readonly workspace: Workspace
+  readonly state: Conf<CompanionState>
   // 新建会话跑的 preset 不给就用 roster 默认值
   readonly agentPreset: string
 }
 
-interface TodaySessionOutcome {
+export interface TodaySessionOutcome {
   readonly sessionId: SessionId
   readonly created: boolean
-  readonly delivered: boolean
+  // 这条会话还没说过话 该补一句问候
+  readonly blank: boolean
 }
 
-// 早上那次投递 有当天会话就复用 空的补一句问候 没有就建一条并记住它
-export function prepareTodaySession(ctx: Context, options: TodaySessionOptions): void {
-  void ensureTodaySession(ctx, options)
-    .then((outcome) => {
-      if (outcome === undefined)
-        return
-
-      console.log(
-        'today session',
-        outcome.created ? 'created' : 'reused',
-        outcome.delivered ? 'delivered' : 'silent',
-        outcome.sessionId,
-      )
-
-      try {
-        if (options.state.get('todaySessionId') !== outcome.sessionId) {
-          options.state.set('todaySessionId', outcome.sessionId)
-          console.log('state todaySessionId', outcome.sessionId)
-        }
-      }
-      catch (error: unknown) {
-        console.error('failed to save today session state', error)
-      }
-    })
-    .catch((error: unknown) => {
-      console.error('failed to prepare today session', error)
-    })
-}
-
-async function ensureTodaySession(
+// 找今天那条会话 没有就建一条并改名 只负责把会话准备好 投递交给 outbox
+export async function ensureTodaySession(
   ctx: Context,
   options: TodaySessionOptions,
-): Promise<TodaySessionOutcome | undefined> {
+): Promise<TodaySessionOutcome> {
   const title = todayTitle()
   const existing = await findSessionTitled(ctx, options, title)
 
-  if (existing !== undefined) {
-    if (!existing.blank)
-      return { sessionId: existing.sessionId, created: false, delivered: false }
-
-    await deliverPrompt(ctx, existing.sessionId, options.message)
-
-    return { sessionId: existing.sessionId, created: false, delivered: true }
-  }
+  if (existing !== undefined)
+    return { sessionId: existing.sessionId, created: false, blank: existing.blank }
 
   const { sessionId } = await ctx.sessionController.create({
     workspaceId: options.workspace.id,
     agentPreset: options.agentPreset,
   })
   await ctx.sessionController.rename({ sessionId, title })
-  await deliverPrompt(ctx, sessionId, options.message)
 
-  return { sessionId, created: true, delivered: true }
+  return { sessionId, created: true, blank: true }
 }
 
 async function findSessionTitled(
