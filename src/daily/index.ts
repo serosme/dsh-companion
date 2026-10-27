@@ -41,18 +41,23 @@ async function openToday(ctx: Context, options: DailyOptions): Promise<void> {
   console.log('today session', outcome.created ? 'created' : 'reused', outcome.sessionId)
 
   // outbox 按 state 里的 id 投递 先把它指到今天这条
-  if (options.state.get('todaySessionId') !== outcome.sessionId)
+  if (options.state.get('todaySessionId') !== outcome.sessionId) {
     options.state.set('todaySessionId', outcome.sessionId)
+    console.log('state todaySessionId', outcome.sessionId)
+  }
 
   // 已经聊过的会话不补问候 免得每天重复打招呼
   if (!outcome.blank) {
-    console.log('today session already has talk, no greeting')
+    console.log('today session has messages, skip greeting')
     return
   }
 
   const delivered = await options.outbox.send(formatEvent(options.config.label))
 
-  console.log('greeting', delivered ? 'delivered' : 'dropped')
+  if (delivered)
+    console.log('greeting delivered')
+  else
+    console.warn('greeting dropped')
 }
 
 // 收到事件就去准备会话 失败只打日志 不往外抛
@@ -77,8 +82,6 @@ function scheduleDaily(ctx: Context, config: ConfigValue['daily']): void {
     runNow: true,
     task: () => publishDaily(ctx),
   })
-
-  console.log('daily scheduled every', config.cron)
 }
 
 // 只负责把监听和定时器组装起来

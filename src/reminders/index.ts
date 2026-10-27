@@ -49,6 +49,6 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
       }
     }, `dsh-companion:reminders:${String(agent.session.id)}`)
 
-    console.log('reminder tools attached to', String(agent.session.id))
+    console.log('attached reminders to', String(agent.session.id))
   })
 }

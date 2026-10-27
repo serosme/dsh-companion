@@ -56,6 +56,6 @@ export function attachSelf(ctx: Context, workspace: Workspace): void {
       }
     }, `dsh-companion:self:${String(agent.session.id)}`)
 
-    console.log('companion memory attached to', String(agent.session.id))
+    console.log('attached memory to', String(agent.session.id))
   })
 }

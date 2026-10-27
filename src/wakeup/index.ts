@@ -30,11 +30,14 @@ function publishWakeup(ctx: Context): void {
 function listenWakeup(ctx: Context, outbox: Outbox): void {
   // 监听随插件执行域释放 不用手动注销
   ctx.on('companion/wakeup', () => {
-    console.log('wakeup received, sending', WAKEUP_MESSAGE)
+    console.log('wakeup received')
 
-    // 投递异常由 outbox 吞掉 这里只关心有没有送进会话
+    // 投递异常由 outbox 吞掉 这里只看有没有送进会话
     void outbox.send(WAKEUP_MESSAGE).then((delivered) => {
-      console.log('wakeup delivered', delivered)
+      if (delivered)
+        console.log('wakeup delivered')
+      else
+        console.warn('wakeup dropped')
     })
   })
 }
@@ -47,8 +50,6 @@ function scheduleWakeup(ctx: Context, config: ConfigValue['wakeup']): void {
     cron: config.cron,
     task: () => publishWakeup(ctx),
   })
-
-  console.log('wakeup scheduled every', config.cron)
 }
 
 // 只负责把监听和定时器组装起来

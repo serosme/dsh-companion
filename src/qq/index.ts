@@ -37,8 +37,10 @@ export function attachQq(ctx: Context, options: QqOptions): void {
       // 来自 QQ 的消息标上自己的来源 历史里能看出不是这里说的
       void options.outbox.send(formatInbound(inbound), { kind: 'qq' })
         .then((delivered) => {
-          if (!delivered)
-            console.warn('qq message dropped, no today session', inbound.userId)
+          if (delivered)
+            console.log('qq message from', inbound.userId, 'delivered')
+          else
+            console.warn('qq message from', inbound.userId, 'dropped')
         })
     },
   })

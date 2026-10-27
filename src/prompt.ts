@@ -46,7 +46,7 @@ export function attachPrompt(ctx: Context, workspace: Workspace): void {
       }
     }, `dsh-companion:prompt:${String(agent.session.id)}`)
 
-    console.log('companion prompt attached to', String(agent.session.id))
+    console.log('attached prompt to', String(agent.session.id))
   })
 }
 
