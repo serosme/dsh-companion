@@ -25,8 +25,6 @@ const SILENCED_SECTIONS: readonly { readonly name: string, readonly order: Promp
 
 // 注册陪伴的提示词段落 并清空宿主那些描述本部署没有的能力的段落
 export function attachPrompt(ctx: Context, workspace: Workspace): void {
-  const log = ctx.logger()
-
   attachWorkspaceAgents(ctx, workspace, (agent) => {
     const scope = agent.ctx
     const prompt = scope.systemPrompt
@@ -39,7 +37,7 @@ export function attachPrompt(ctx: Context, workspace: Workspace): void {
           order: prompt.getSectionOrder('DEPLOYMENT_PERSONA_PREFIX') + 1,
           text: COMPANION_PROTOCOL,
         }),
-        ...SILENCED_SECTIONS.map(({ name, order }) => silence(scope, name, order, log)),
+        ...SILENCED_SECTIONS.map(({ name, order }) => silence(scope, name, order)),
       ]
 
       return () => {
@@ -48,7 +46,7 @@ export function attachPrompt(ctx: Context, workspace: Workspace): void {
       }
     }, `dsh-companion:prompt:${String(agent.session.id)}`)
 
-    log.info('companion prompt attached to', String(agent.session.id))
+    console.log('companion prompt attached to', String(agent.session.id))
   })
 }
 
@@ -57,7 +55,6 @@ function silence(
   scope: Context,
   name: string,
   order: PromptSectionOrderName,
-  log: ReturnType<Context['logger']>,
 ): () => void {
   try {
     return scope.systemPrompt.section({
@@ -67,7 +64,7 @@ function silence(
     })
   }
   catch (error: unknown) {
-    log.warn('failed to silence prompt section', name, error)
+    console.warn('failed to silence prompt section', name, error)
     return () => {}
   }
 }

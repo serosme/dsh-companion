@@ -1,10 +1,9 @@
-import type { Context, Logger } from '@deepseek-ai/cordis'
+import type { Context } from '@deepseek-ai/cordis'
 
 export interface SocketOptions {
   readonly url: string
   readonly token: string
   readonly onEvent: (event: unknown) => void
-  readonly log: Logger
 }
 
 const RETRY_MIN_MS = 1_000
@@ -23,7 +22,7 @@ export function connectSocket(ctx: Context, options: SocketOptions): void {
 
     const delay = Math.min(RETRY_MAX_MS, RETRY_MIN_MS * 2 ** retry)
     retry++
-    options.log.warn('qq socket closed, retry in', delay, 'ms')
+    console.warn('qq socket closed, retry in', delay, 'ms')
 
     timer = setTimeout(open, delay)
   }
@@ -36,7 +35,7 @@ export function connectSocket(ctx: Context, options: SocketOptions): void {
 
     socket.addEventListener('open', () => {
       retry = 0
-      options.log.info('qq socket open', options.url)
+      console.log('qq socket open', options.url)
     })
 
     socket.addEventListener('message', (message) => {
@@ -44,7 +43,7 @@ export function connectSocket(ctx: Context, options: SocketOptions): void {
         options.onEvent(JSON.parse(String(message.data)))
       }
       catch (error: unknown) {
-        options.log.warn('qq event dropped, not json', error)
+        console.warn('qq event dropped, not json', error)
       }
     })
 

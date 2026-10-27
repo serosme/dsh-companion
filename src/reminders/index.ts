@@ -21,10 +21,9 @@ export interface RemindersOptions {
 
 // 提醒的计时器和它的三个工具 还有没有别的工具由 preset 决定 不归这里管
 export function attachReminders(ctx: Context, options: RemindersOptions): void {
-  const log = ctx.logger()
   const reminders = new Reminders(ctx, options.workspace, options.state)
 
-  log.info('reminders file', reminders.path)
+  console.log('reminders file', reminders.path)
 
   ctx.effect(() => {
     reminders.load()
@@ -36,7 +35,7 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
 
     scope.effect(() => {
       const disposers = [
-        registerReminderTools(scope, reminders, log),
+        registerReminderTools(scope, reminders),
         scope.systemPrompt.section({
           name: 'companion:reminders',
           // 第二个工具说明位 排在 self 的触发段之后
@@ -51,6 +50,6 @@ export function attachReminders(ctx: Context, options: RemindersOptions): void {
       }
     }, `dsh-companion:reminders:${String(agent.session.id)}`)
 
-    log.info('reminder tools attached to', String(agent.session.id))
+    console.log('reminder tools attached to', String(agent.session.id))
   })
 }

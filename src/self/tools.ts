@@ -1,4 +1,4 @@
-import type { Context, Logger } from '@deepseek-ai/cordis'
+import type { Context } from '@deepseek-ai/cordis'
 import type { LineStore } from './store.ts'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { guard, jsonOutput } from '../shared/tool.ts'
@@ -8,7 +8,7 @@ export interface LineStores {
   readonly profile: LineStore
 }
 
-export function registerSelfTools(scope: Context, stores: LineStores, log: Logger): () => void {
+export function registerSelfTools(scope: Context, stores: LineStores): () => void {
   return scope.tools.register(defineTool({
     name: 'self_revise',
     description: [
@@ -54,7 +54,7 @@ export function registerSelfTools(scope: Context, stores: LineStores, log: Logge
       },
     }),
     async execute(args) {
-      return guard(log, 'self revise', () => {
+      return guard('self revise', () => {
         const store = args.target === 'profile'
           ? stores.profile
           : stores.self
@@ -64,7 +64,7 @@ export function registerSelfTools(scope: Context, stores: LineStores, log: Logge
           ? 0
           : text.split('\n').length
 
-        log.info('self revised', args.target, args.changes.length, 'changes', lines, 'lines')
+        console.log('self revised', args.target, args.changes.length, 'changes', lines, 'lines')
 
         return { ok: true as const, text }
       })

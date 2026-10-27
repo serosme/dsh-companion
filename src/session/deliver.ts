@@ -45,23 +45,22 @@ export async function deliverToToday(
   ctx: Context,
   options: Delivery,
 ): Promise<SessionId | undefined> {
-  const log = ctx.logger()
   const stored = options.state.get('todaySessionId')
 
   if (!stored) {
-    log.info('no stored today session')
+    console.log('no stored today session')
     return undefined
   }
 
   const sessionId = toSessionId(stored)
 
   if (!options.workspace.sessionIds.includes(sessionId)) {
-    log.info('stored today session is not in workspace', stored)
+    console.log('stored today session is not in workspace', stored)
     return undefined
   }
 
   if (ctx.workspaceRegistry.archivedSessionIds.includes(sessionId)) {
-    log.info('stored today session is archived', stored)
+    console.log('stored today session is archived', stored)
     return undefined
   }
 

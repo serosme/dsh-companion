@@ -1,9 +1,9 @@
-import type { Context, Logger } from '@deepseek-ai/cordis'
+import type { Context } from '@deepseek-ai/cordis'
 import type { Reminders } from './scheduler.ts'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { guard, jsonOutput } from '../shared/tool.ts'
 
-export function registerReminderTools(scope: Context, reminders: Reminders, log: Logger): () => void {
+export function registerReminderTools(scope: Context, reminders: Reminders): () => void {
   const disposers = [
     scope.tools.register(defineTool({
       name: 'reminder_create',
@@ -27,11 +27,11 @@ export function registerReminderTools(scope: Context, reminders: Reminders, log:
         },
       }),
       async execute(args) {
-        return guard(log, 'reminder create', () => {
+        return guard('reminder create', () => {
           const task = reminders.add(args.message, args.cron)
           const next = reminders.nextRunAt(task.id)
 
-          log.info('reminder created', task.id, task.cron, 'next', next ?? '-')
+          console.log('reminder created', task.id, task.cron, 'next', next ?? '-')
 
           return {
             ok: true as const,
@@ -64,7 +64,7 @@ export function registerReminderTools(scope: Context, reminders: Reminders, log:
         },
       }),
       async execute() {
-        log.info('reminder list', reminders.list.length)
+        console.log('reminder list', reminders.list.length)
 
         return reminders.list.map((task) => {
           const next = reminders.nextRunAt(task.id)
@@ -102,9 +102,9 @@ export function registerReminderTools(scope: Context, reminders: Reminders, log:
         const cancelled = reminders.cancel(args.id)
 
         if (cancelled)
-          log.info('reminder cancelled', args.id)
+          console.log('reminder cancelled', args.id)
         else
-          log.warn('reminder cancel missed', args.id)
+          console.warn('reminder cancel missed', args.id)
 
         return { ok: cancelled }
       },

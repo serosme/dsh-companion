@@ -15,8 +15,6 @@ export function createOutbox(
   workspace: Workspace,
   state: Conf<CompanionState>,
 ): Outbox {
-  const log = ctx.logger()
-
   return {
     // 投一条消息进今天那条会话 送达返回 true
     send: async (text) => {
@@ -32,13 +30,13 @@ export function createOutbox(
         if (sessionId === undefined)
           return false
 
-        log.info('delivered to', sessionId)
+        console.log('delivered to', sessionId)
 
         return true
       }
       catch (error: unknown) {
         // 投递是基础设施 调用方不该收到异常 也不该为此写 catch
-        log.error('delivery failed', error)
+        console.error('delivery failed', error)
 
         return false
       }

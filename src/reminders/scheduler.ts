@@ -37,7 +37,6 @@ export class Reminders {
 
   load(): void {
     const stored = this.conf.get('reminders')
-    const log = this.ctx.logger()
 
     const kept = stored.filter((task) => {
       try {
@@ -46,14 +45,14 @@ export class Reminders {
       }
       catch (error: unknown) {
         // 排不出下一次执行的任务永远不会再触发 留着只会越积越多
-        log.warn('dropping unfireable reminder', task.id, task.cron, error)
+        console.warn('dropping unfireable reminder', task.id, task.cron, error)
         return false
       }
     })
 
     this.tasks = kept
 
-    log.info('reminders loaded', kept.length, 'of', stored.length, 'armed', this.timers.size)
+    console.log('reminders loaded', kept.length, 'of', stored.length, 'armed', this.timers.size)
 
     if (kept.length !== stored.length)
       this.persist()
@@ -112,7 +111,7 @@ export class Reminders {
       job = new Cron(normalizeCron(task.cron), { timezone: TIME_ZONE }, () => {
         // 投递内部自己吞异常 但收尾那次落盘还可能抛 不许它变成没人接的 rejection
         void this.fire(task.id).catch((error: unknown) => {
-          this.ctx.logger().error('reminder tick failed', task.id, error)
+          console.error('reminder tick failed', task.id, error)
         })
       })
     }
@@ -143,7 +142,7 @@ export class Reminders {
       return
 
     if (this.inFlight.has(id)) {
-      this.ctx.logger().info('reminder still delivering, skip tick', id)
+      console.log('reminder still delivering, skip tick', id)
       return
     }
 
@@ -167,13 +166,12 @@ export class Reminders {
       }) !== undefined
     }
     catch (error: unknown) {
-      this.ctx.logger().error('failed to fire reminder', task.id, error)
+      console.error('failed to fire reminder', task.id, error)
       return false
     }
   }
 
   private settle(task: Reminder, delivered: boolean): void {
-    const log = this.ctx.logger()
     // 没有下一拍就是最后一次 送到没送到都不该再留在列表里
     const last = (this.timers.get(task.id)?.nextRun() ?? null) === null
 
@@ -195,8 +193,8 @@ export class Reminders {
     this.persist()
 
     if (delivered)
-      log.info('reminder fired', task.id, task.message)
+      console.log('reminder fired', task.id, task.message)
     else
-      log.warn('reminder not delivered', task.id, last ? 'expired' : 'kept for retry')
+      console.warn('reminder not delivered', task.id, last ? 'expired' : 'kept for retry')
   }
 }

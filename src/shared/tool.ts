@@ -1,4 +1,3 @@
-import type { Logger } from '@deepseek-ai/cordis'
 import type { TextBlock } from '@deepseek-ai/dsh-llm'
 import type { ValueSchemaSpec } from '@deepseek-ai/dsh-tools'
 
@@ -16,9 +15,8 @@ export function jsonOutput<S extends ValueSchemaSpec>(schema: S): { schema: S, r
   return { schema, render: renderJson }
 }
 
-// 工具体的统一失败形状 记日志 把原因交回模型 别让异常冒到调用栈上
+// 工具体的统一失败形状 打一行日志 把原因交回模型 别让异常冒到调用栈上
 export function guard<R extends object>(
-  log: Logger,
   what: string,
   run: () => R,
 ): R | { ok: false, error: string } {
@@ -30,7 +28,7 @@ export function guard<R extends object>(
       ? error.message
       : String(error)
 
-    log.warn(what, 'failed', message)
+    console.warn(what, 'failed', message)
 
     return { ok: false, error: message }
   }

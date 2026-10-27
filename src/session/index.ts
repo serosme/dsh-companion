@@ -22,14 +22,12 @@ interface TodaySessionOutcome {
 
 // 早上那次投递 有当天会话就复用 空的补一句问候 没有就建一条并记住它
 export function prepareTodaySession(ctx: Context, options: TodaySessionOptions): void {
-  const log = ctx.logger()
-
   void ensureTodaySession(ctx, options)
     .then((outcome) => {
       if (outcome === undefined)
         return
 
-      log.info(
+      console.log(
         'today session',
         outcome.created ? 'created' : 'reused',
         outcome.delivered ? 'delivered' : 'silent',
@@ -39,15 +37,15 @@ export function prepareTodaySession(ctx: Context, options: TodaySessionOptions):
       try {
         if (options.state.get('todaySessionId') !== outcome.sessionId) {
           options.state.set('todaySessionId', outcome.sessionId)
-          log.info('state todaySessionId', outcome.sessionId)
+          console.log('state todaySessionId', outcome.sessionId)
         }
       }
       catch (error: unknown) {
-        log.error('failed to save today session state', error)
+        console.error('failed to save today session state', error)
       }
     })
     .catch((error: unknown) => {
-      log.error('failed to prepare today session', error)
+      console.error('failed to prepare today session', error)
     })
 }
 

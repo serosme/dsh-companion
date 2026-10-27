@@ -17,11 +17,10 @@ import { attachWakeup } from './wakeup/index.ts'
 export function attachCompanion(ctx: Context, config: ConfigValue): void {
   const workspace = requireWorkspace(ctx, config.workspacePath)
   const state = openState(workspace.path)
-  const log = ctx.logger()
   const outbox = createOutbox(ctx, workspace, state)
 
-  log.info('using workspace', workspace.path)
-  log.info('state file', state.path)
+  console.log('using workspace', workspace.path)
+  console.log('state file', state.path)
 
   attachClock(ctx, workspace)
   attachReminders(ctx, { workspace, state })

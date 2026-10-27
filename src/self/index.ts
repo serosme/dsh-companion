@@ -47,7 +47,7 @@ export function attachSelf(ctx: Context, workspace: Workspace): void {
           order: prompt.getSectionOrder('PLAN_POLICY') + 1,
           text: SELF_GUIDANCE,
         }),
-        registerSelfTools(scope, { self: selfStore, profile: profileStore }, ctx.logger()),
+        registerSelfTools(scope, { self: selfStore, profile: profileStore }),
       ]
 
       return () => {
@@ -56,6 +56,6 @@ export function attachSelf(ctx: Context, workspace: Workspace): void {
       }
     }, `dsh-companion:self:${String(agent.session.id)}`)
 
-    ctx.logger().info('companion memory attached to', String(agent.session.id))
+    console.log('companion memory attached to', String(agent.session.id))
   })
 }
