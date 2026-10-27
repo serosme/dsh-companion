@@ -17,8 +17,9 @@ export const Config = Schema.object({
       .pattern(/\S/),
   }),
   wakeup: Schema.object({
+    // 只在他醒着的时候唤醒 半夜那几拍不排 否则每半小时一句
     cron: Schema.string()
-      .default('0 */30 7-23,0-2 * * ? *'),
+      .default('0 */30 7-23 * * ? *'),
     label: Schema.string()
       .default('主动唤醒')
       .pattern(/\S/),

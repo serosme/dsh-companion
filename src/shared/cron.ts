@@ -21,7 +21,15 @@ export function schedule(ctx: Context, options: ScheduledTask): void {
   ctx.effect(() => {
     const job = new Cron(normalizeCron(options.cron), { timezone: TIME_ZONE }, () => {
       log.info(options.name, 'tick')
-      options.task()
+
+      // croner 不接回调抛出的异常 抛出去就是没人接的 rejection 会让宿主退出
+      // 错过一拍下一拍还在 记一条日志就行
+      try {
+        options.task()
+      }
+      catch (error: unknown) {
+        log.error(options.name, 'tick failed', error)
+      }
     })
 
     return () => job.stop()

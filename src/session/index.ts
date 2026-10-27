@@ -132,7 +132,8 @@ export interface WakeupOptions extends Delivery {
 // 时钟事件投进当天会话 和早上那次同一个目标 同一套失败处理 所以放这里而不是单独一个模块
 export function wakeTodaySession(ctx: Context, options: WakeupOptions): void {
   const log = ctx.logger()
-  const last = parseIsoLocal(options.state.get('lastActivityAt')) ?? 0
+  // conf 只在构造时补默认值 运行中被删掉的键 get 会返回 undefined 类型看不出来
+  const last = parseIsoLocal(options.state.get('lastActivityAt') ?? '') ?? 0
   const since = Date.now() - last
 
   if (since < options.gapMs) {

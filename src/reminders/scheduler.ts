@@ -110,7 +110,10 @@ export class Reminders {
 
     try {
       job = new Cron(normalizeCron(task.cron), { timezone: TIME_ZONE }, () => {
-        void this.fire(task.id)
+        // 投递内部自己吞异常 但收尾那次落盘还可能抛 不许它变成没人接的 rejection
+        void this.fire(task.id).catch((error: unknown) => {
+          this.ctx.logger().error('reminder tick failed', task.id, error)
+        })
       })
     }
     catch (error: unknown) {

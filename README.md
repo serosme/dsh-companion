@@ -43,6 +43,8 @@
                 SNOWLUMA_MCP_MODE: write
 ```
 
+`qq.accessToken` 和 `SNOWLUMA_MCP_TOKEN` 填同一个网关令牌。它是明文写在这个文件里的。
+
 `daily.label` 和 `wakeup.label` 可以改，改完要同步插件的协议段。
 
 协议段在 `src/prompt.ts`，里面写死了 `新的一天`、`主动唤醒`、`提醒` 三个标签；`提醒` 改不了。
