@@ -1,7 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { LineStore } from './store.ts'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import { guard, jsonOutput } from '../shared/tool.ts'
+import { jsonOutput } from '../shared/tool.ts'
 
 export interface LineStores {
   readonly self: LineStore
@@ -50,24 +50,22 @@ export function registerSelfTools(scope: Context, stores: LineStores): () => voi
       properties: {
         ok: { type: 'boolean', required: true },
         text: { type: 'string' },
-        error: { type: 'string' },
       },
     }),
     async execute(args) {
-      return guard('self revise', () => {
-        const store = args.target === 'profile'
-          ? stores.profile
-          : stores.self
+      const store = args.target === 'profile'
+        ? stores.profile
+        : stores.self
 
-        const text = store.revise(args.changes)
-        const lines = text === ''
-          ? 0
-          : text.split('\n').length
+      // 行匹配不上就在这里抛 由宿主把原因转成错误结果交给模型
+      const text = store.revise(args.changes)
+      const lines = text === ''
+        ? 0
+        : text.split('\n').length
 
-        console.log('self revised', args.target, args.changes.length, 'changes', lines, 'lines')
+      console.log('self revised', args.target, args.changes.length, 'changes', lines, 'lines')
 
-        return { ok: true as const, text }
-      })
+      return { ok: true as const, text }
     },
   }))
 }

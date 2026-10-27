@@ -1,7 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { Reminders } from './scheduler.ts'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import { guard, jsonOutput } from '../shared/tool.ts'
+import { jsonOutput } from '../shared/tool.ts'
 
 export function registerReminderTools(scope: Context, reminders: Reminders): () => void {
   const disposers = [
@@ -23,24 +23,22 @@ export function registerReminderTools(scope: Context, reminders: Reminders): () 
           ok: { type: 'boolean', required: true },
           id: { type: 'string' },
           nextRunAt: { type: 'string' },
-          error: { type: 'string' },
         },
       }),
       async execute(args) {
-        return guard('reminder create', () => {
-          const task = reminders.add(args.message, args.cron)
-          const next = reminders.nextRunAt(task.id)
+        // cron 写错就在这里抛 由宿主把原因转成错误结果交给模型
+        const task = reminders.add(args.message, args.cron)
+        const next = reminders.nextRunAt(task.id)
 
-          console.log('reminder created', task.id, task.cron, 'next', next ?? '-')
+        console.log('reminder created', task.id, task.cron, 'next', next ?? '-')
 
-          return {
-            ok: true as const,
-            id: task.id,
-            ...(next === null
-              ? {}
-              : { nextRunAt: next }),
-          }
-        })
+        return {
+          ok: true as const,
+          id: task.id,
+          ...(next === null
+            ? {}
+            : { nextRunAt: next }),
+        }
       },
     })),
 
