@@ -11,8 +11,6 @@
       wsUrl: ''
       accessToken: ''
       allowPrivate: ['']
-    wakeup:
-      gapMinutes: 30
 - insert:
     - id: preset-companion
       name: '@deepseek-ai/dsh-agent-preset'
@@ -45,6 +43,6 @@
 
 `qq.accessToken` 和 `SNOWLUMA_MCP_TOKEN` 填同一个网关令牌。它是明文写在这个文件里的。
 
-`daily.label` 和 `wakeup.label` 可以改，改完要同步插件的协议段。
+`daily.label` 可以改，改完要同步插件的协议段。
 
-协议段在 `src/prompt.ts`，里面写死了 `新的一天`、`主动唤醒`、`提醒` 三个标签；`提醒` 改不了。
+协议段在 `src/prompt.ts`，里面写死了 `新的一天` 和 `提醒` 两个标签；`提醒` 改不了。

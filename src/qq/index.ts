@@ -2,7 +2,6 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import type Conf from 'conf'
 import type { CompanionState } from '../session/state.ts'
-import { markActivity } from '../session/activity.ts'
 import { deliverToToday } from '../session/deliver.ts'
 import { formatInbound, normalizeAllow, readPrivateMessage } from './inbound.ts'
 import { connectSocket } from './socket.ts'
@@ -48,13 +47,8 @@ export function attachQq(ctx: Context, options: QqOptions): void {
         message: formatInbound(inbound),
       })
         .then((sessionId) => {
-          if (sessionId === undefined) {
+          if (sessionId === undefined)
             log.warn('qq message dropped, no today session', inbound.userId)
-            return
-          }
-
-          // 真的进了会话才算一次联系 没投进去不该把唤醒往后推
-          markActivity(options.state)
         })
         .catch((error: unknown) => {
           log.error('qq message delivery failed', error)

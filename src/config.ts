@@ -16,17 +16,6 @@ export const Config = Schema.object({
       .default('新的一天')
       .pattern(/\S/),
   }),
-  wakeup: Schema.object({
-    // 只在他醒着的时候唤醒 半夜那几拍不排 否则每半小时一句
-    cron: Schema.string()
-      .default('0 */30 7-23 * * ? *'),
-    label: Schema.string()
-      .default('主动唤醒')
-      .pattern(/\S/),
-    // 距上次说话不到这么多分钟就不唤醒 免得你们正聊着它插一句
-    gapMinutes: Schema.number()
-      .default(30),
-  }),
   qq: Schema.object({
     // 不填 wsUrl 或 allowPrivate 就整块跳过 不连 socket
     wsUrl: Schema.string()
