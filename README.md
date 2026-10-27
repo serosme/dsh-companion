@@ -11,6 +11,8 @@
       wsUrl: ''
       accessToken: ''
       allowPrivate: ['']
+    wakeup:
+      cron: '0 */30 7-23 * * * *'
 - insert:
     - id: preset-companion
       name: '@deepseek-ai/dsh-agent-preset'
@@ -41,8 +43,10 @@
                 SNOWLUMA_MCP_MODE: write
 ```
 
+`daily.cron` 决定每天几点开新会话，默认 6:30；`daily.label` 是那句问候的标签，
+投递时会变成 `事件 | 新的一天`，可以换成别的词。
+
+`wakeup.cron` 决定多久唤醒一次，默认 7 点到 23 点半每半小时一次。
+两个 cron 都按 Asia/Shanghai 算。
+
 `qq.accessToken` 和 `SNOWLUMA_MCP_TOKEN` 填同一个网关令牌。它是明文写在这个文件里的。
-
-`daily.label` 可以改，改完要同步插件的协议段。
-
-协议段在 `src/prompt.ts`，里面写死了 `新的一天` 和 `提醒` 两个标签；`提醒` 改不了。

@@ -16,6 +16,10 @@ export const Config = Schema.object({
       .default('新的一天')
       .pattern(/\S/),
   }),
+  wakeup: Schema.object({
+    cron: Schema.string()
+      .default('0 */30 7-23 * * * *'),
+  }),
   qq: Schema.object({
     // 不填 wsUrl 或 allowPrivate 就整块跳过 不连 socket
     wsUrl: Schema.string()

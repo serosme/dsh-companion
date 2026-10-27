@@ -3,10 +3,11 @@ import type { PromptSectionOrderName } from '@deepseek-ai/dsh-system-prompt'
 import type { Workspace } from '@deepseek-ai/dsh-workspace'
 import { attachWorkspaceAgents } from './shared/agent-scope.ts'
 
-// 三种消息来源 各自的处理方式不一样 说清前缀是在说来源 不描述工具怎么调
+// 只讲前缀是什么意思 具体是哪件事写在标签里 标签自解释 不在这里列
 const COMPANION_PROTOCOL = [
   '带 QQ | 前缀的是他在 QQ 上发来的，要回。回的时候用 QQ 的发送动作把话发出去，不要只在会话里说。',
-  '带 事件 | 前缀的是外面发生的事：新的一天 表示一天开始，提醒 是你自己之前定下的。这种时候自己判断要不要开口，开口也是往 QQ 发消息；不想说就不发，可以想想有没有没聊完的话题。',
+  '带 事件 | 前缀的不是他在说话，是一条客观发生的事情。竖线后面写着发生了什么，比如一天开始了，比如到了某个钟点，比如你之前定下的提醒到点了。',
+  '收到这种消息，要不要开口你自己判断。开口也是往 QQ 发消息；不想说就不发，可以想想有没有没聊完的话题。',
   '不带前缀的是他直接在这个会话里说的话，接话就行；不要主动往 QQ 发消息，除非他明确让你发。',
 ].join('\n')
 
