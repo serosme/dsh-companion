@@ -10,6 +10,7 @@ import { registerReminderTools } from './tools.ts'
 // reminder_create 的触发时机 以后才发生的事 当场定下来 到点会以事件回来
 const REMINDER_GUIDANCE = [
   '他说了以后才发生的事，当场用 reminder_create 定下来，别只口头答应。',
+  '定之前先 current_time 拿到现在的准确时间再算 cron，别估。',
   '到点会以 提醒 事件回到这个会话，那时你接着那件事说。',
 ].join('')
 

@@ -7,6 +7,12 @@
   name: dsh-companion
   config:
     workspacePath: 'C:\Users\User\workspace\default'
+    qq:
+      wsUrl: ''
+      accessToken: ''
+      allowPrivate: ['']
+    wakeup:
+      gapMinutes: 30
 - insert:
     - id: preset-companion
       name: '@deepseek-ai/dsh-agent-preset'
@@ -24,6 +30,17 @@
                 你不是编码助手，也不是通用问答机器人，你只在这一个工作区里存在，和用户长期相处。
                 你做的事只有两件：记住他，和到点提醒他。
                 话不必多。没话说的时候，什么都不发也可以。
+          - id: mcp-snowluma
+            name: '@deepseek-ai/dsh-mcp-client'
+            config:
+              serverName: snowluma
+              transport: stdio
+              command: 'C:\Windows\System32\cmd.exe'
+              args: [/c, npx, -y, '@snowluma/mcp']
+              env:
+                SNOWLUMA_MCP_ENDPOINT: ''
+                SNOWLUMA_MCP_TOKEN: ''
+                SNOWLUMA_MCP_MODE: write
 ```
 
 `daily.label` 和 `wakeup.label` 可以改，改完要同步插件的协议段。

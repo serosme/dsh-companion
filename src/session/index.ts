@@ -3,8 +3,9 @@ import type { SessionSummary } from '@deepseek-ai/dsh-api-session-controller'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type { Delivery } from './deliver.ts'
 import { SessionId as toSessionId } from '@deepseek-ai/dsh-session'
-import { todayTitle } from '../shared/time.ts'
+import { parseIsoLocal, todayTitle } from '../shared/time.ts'
 import { samePath } from '../shared/workspace.ts'
+import { markActivity } from './activity.ts'
 import { deliverPrompt, deliverToToday } from './deliver.ts'
 
 const LIST_TIMEOUT_MS = 10_000
@@ -41,9 +42,13 @@ export function prepareTodaySession(ctx: Context, options: TodaySessionOptions):
           options.state.set('todaySessionId', outcome.sessionId)
           log.info('state todaySessionId', outcome.sessionId)
         }
+
+        // 早上这句也算一次主动联系 不然 6:30 说完 7:00 又会唤醒一次
+        if (outcome.delivered)
+          markActivity(options.state)
       }
       catch (error: unknown) {
-        log.error('failed to save state todaySessionId', error)
+        log.error('failed to save today session state', error)
       }
     })
     .catch((error: unknown) => {
@@ -119,14 +124,31 @@ function pickTodaySession(options: SelectOptions): SessionSummary | undefined {
   return candidates.find(item => item.sessionId === preferredId) ?? candidates[0]
 }
 
+export interface WakeupOptions extends Delivery {
+  // 距上次联系不到这么多毫秒就跳过 免得正聊着它插一句
+  readonly gapMs: number
+}
+
 // 时钟事件投进当天会话 和早上那次同一个目标 同一套失败处理 所以放这里而不是单独一个模块
-export function wakeTodaySession(ctx: Context, options: Delivery): void {
+export function wakeTodaySession(ctx: Context, options: WakeupOptions): void {
+  const log = ctx.logger()
+  const last = parseIsoLocal(options.state.get('lastActivityAt')) ?? 0
+  const since = Date.now() - last
+
+  if (since < options.gapMs) {
+    log.info('wakeup skipped, talked', Math.round(since / 60_000), 'min ago')
+    return
+  }
+
   void deliverToToday(ctx, options)
     .then((sessionId) => {
-      if (sessionId !== undefined)
-        ctx.logger().info('woke today session', sessionId)
+      if (sessionId === undefined)
+        return
+
+      markActivity(options.state)
+      log.info('woke today session', sessionId)
     })
     .catch((error: unknown) => {
-      ctx.logger().error('failed to wake today session', error)
+      log.error('failed to wake today session', error)
     })
 }

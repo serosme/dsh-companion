@@ -22,6 +22,19 @@ export const Config = Schema.object({
     label: Schema.string()
       .default('主动唤醒')
       .pattern(/\S/),
+    // 距上次说话不到这么多分钟就不唤醒 免得你们正聊着它插一句
+    gapMinutes: Schema.number()
+      .default(30),
+  }),
+  qq: Schema.object({
+    // 不填 wsUrl 或 allowPrivate 就整块跳过 不连 socket
+    wsUrl: Schema.string()
+      .default(''),
+    accessToken: Schema.string()
+      .default(''),
+    // 只收这些 QQ 号的私聊
+    allowPrivate: Schema.array(Schema.string())
+      .default([]),
   }),
 })
 
